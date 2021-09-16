@@ -1,4 +1,9 @@
 #!/usr/bin/env ruby
 
-require 'cvmaker'
+if __FILE__.match(/exe\/cv$/) 
+  require_relative '../lib/cvmaker'
+else
+  require 'cvmaker'
+end
+
 CVMaker::CLI.start
