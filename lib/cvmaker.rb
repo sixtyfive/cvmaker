@@ -6,23 +6,30 @@ require_relative 'cvmaker/commands'
 require 'slop'
 
 module CVMaker
-  class Error < StandardError; end
-    
   class CLI
     def print_usage; puts @opts; exit; end
 
     def initialize
-      slop_config = Slop::Options.new
-      slop_config.banner = "Usage: cv <command> [options]\n\n" \
-                         + "  available commands:\n\n" \
-                         + "  - make <path to .txt file>\n" \
-                         + "  - edit <preamble|cv_template|cl_template> or <path to .txt file>"
-      slop_parser = Slop::Parser.new(slop_config)
-      @opts = slop_parser.parse(ARGV)
+      opts = Slop::Options.new
+      opts.banner = "Usage: "+"cv".light_blue+" <command> [options]\n\n" \
+                  + "  available commands:\n\n" \
+                  + "  make <path to .txt file>".light_blue+" (file can be CV parameters only, or also have a CL text)\n" \
+                  + "  edit <cv|cl_template|preamble>".light_blue+" (all are LaTeX) or "+"<path to .txt file>".light_blue
+      opts.separator "\n  options:\n"
+      opts.string '-l', '--lang', 'language of template to edit, or of template to use for making the PDF(s)'
+      opts.separator "                languages should be specified in ISO-639-2, "+"e.g. 'en', 'hi', 'jbo', etc.".light_blue
+      opts.separator "                (the default language is English - or the .txt's LANG option if present)\n"
+      opts.separator "  Output PDF(s) will be written to a new folder, i.e."
+      opts.separator "  for a CL called Rekall.txt, you'll get Rekall/*.pdf"
+      @opts = Slop::Parser.new(opts).parse(ARGV)
       print_usage unless @opts.arguments.any?
       @command = @opts.arguments.first
       print_usage unless CVMaker::KNOWN_COMMANDS.include? @command
-      CVMaker::Commands.public_send(@command, @opts)
+      begin
+        CVMaker::Commands.public_send(@command, @opts)
+      rescue ArgumentError
+        print_usage
+      end
     end
 
     def self.start; new; end
