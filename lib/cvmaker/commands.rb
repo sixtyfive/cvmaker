@@ -53,8 +53,9 @@ module CVMaker
         outdir = File.basename(@params_file,'.txt')
         outpath = File.join(inpath, outdir)
         FileUtils.mkdir_p(outpath)
-        FileUtils.cp(Dir[File.join(tmpdir,'C{L,V}*.pdf')], outpath)
         CVMaker::Compiler.run(tmpdir, File.basename(@params_file), @res_files, @tpl_files)
+        outfiles = Dir[File.join(tmpdir,'C{V,L}*.pdf')]
+        FileUtils.cp(outfiles, outpath)
         FileUtils.remove_entry(tmpdir)
         puts "All done! Find your freshly made PDFs in #{outpath}!".green
       rescue Errno::ENOENT => e
