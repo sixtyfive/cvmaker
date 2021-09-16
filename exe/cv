@@ -1,2 +1,4 @@
 #!/usr/bin/env ruby
 
+require 'cvmaker'
+CVMaker::CLI.start

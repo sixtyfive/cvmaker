@@ -4,7 +4,7 @@ require_relative "lib/cvmaker/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "cvmaker"
-  spec.version       = Cvmaker::VERSION
+  spec.version       = CVMaker::VERSION
   spec.authors       = ["J. R. Schmid"]
   spec.email         = ["jrs+git@weitnahbei.de"]
 
@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "colorize"
   spec.add_dependency "whirly"
+  spec.add_dependency "slop"
 
   # For more information and examples about making a new gem, checkout our
   # guide at: https://bundler.io/guides/creating_gem.html

@@ -2,7 +2,13 @@
 
 require_relative "cvmaker/version"
 
-module Cvmaker
+require 'slop'
+
+module CVMaker
   class Error < StandardError; end
-  # Your code goes here...
+
+  class CLI
+    def self.start
+    end
+  end
 end
