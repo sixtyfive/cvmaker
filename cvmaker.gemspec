@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["J. R. Schmid"]
   spec.email         = ["jrs+git@weitnahbei.de"]
 
-  spec.summary       = "A small collection of commands to create and modify CV and Cover Letters easily with Markdown and LaTeX"
+  spec.summary       = "A small command-line tool for creating and modifying CVs and cover letters using LaTeX' moderncv style"
   spec.homepage      = "https://github.com/sixtyfive/cvmaker"
   spec.required_ruby_version = ">= 2.4.0"
 

@@ -1,0 +1,44 @@
+OWN_FIRSTNAME              = ''
+OWN_LASTNAME               = ''
+OWN_STREET                 = ''
+OWN_CITY                   = ''
+OWN_COUNTRY                = ''
+OWN_MOBILE                 = ''
+OWN_EMAIL                  = ''
+OWN_DATEOFBIRTH            = ''
+OWN_NATIONALITY            = ''
+OWN_FULLNAME               = ''
+OWN_PICTURE                = ''
+OWN_SIGNATURE              = ''
+
+ADDRESSEE_FULLNAME         = ""
+ADDRESSEE_TITLEANDLASTNAME = ""
+
+# Can be multi-line if needed.
+
+ADDRESSEE_INSTITUTION      = "
+                             "
+
+ADDRESSEE_STREET           = ""
+ADDRESSEE_CITY             = ""
+ADDRESSEE_COUNTRY          = ""
+
+CL_SUBJECT                 = ""
+
+# Files need to be named accordingly in camel case with no punctuation: 
+# i.e. you'd name it "BachelorsCertificate.pdf" for "Bachelor's Certificate"
+#      or "MastersCertificate.pdf" for "Master's Certificate"
+
+CL_ATTACHMENTS             = "Bachelor's Certificate, Master's Certificate"
+
+# As many paragraphs as you wish!
+
+CL_PARAGRAPHS              = "
+
+First paragraph lalala...
+
+Second paragraph lalala...
+
+Third paragraph lalala...
+
+"

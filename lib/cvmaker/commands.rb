@@ -7,8 +7,8 @@ require 'tty-editor'
 require_relative 'compiler'
 
 module CVMaker
-  KNOWN_COMMANDS = %w[make edit]
-  TEMPLATES = %w[preamble cv cl_template]
+  KNOWN_COMMANDS = %w[newdoc make edit]
+  TEMPLATES = %w[newdoc preamble cv cl_template]
   RES_FILE_TYPES = %w[pdf tif tiff png jpg jpeg gif bmp]
 
   class Commands
@@ -17,10 +17,11 @@ module CVMaker
       @opts[:lang] ||= Iso639['English'].alpha2
       raise ArgumentError unless Iso639[@opts[:lang]] 
       raise ArgumentError if @opts.arguments.size != 2
-      @params_file = @opts.arguments[1]
+      @main_arg = @opts.arguments[1]
     end
 
     def filename(tpl_name)
+      return tpl_name+'.txt' if tpl_name == 'newdoc'
       tpl_name.gsub(/_template$/,'')+'-'+@opts[:lang]+'.tex.tpl'
     end
     
@@ -31,8 +32,27 @@ module CVMaker
     def user_template(tpl_name)
       return File.join(Dir.home, '.cvmaker', filename(tpl_name))
     end
+    
+    def copy_template(from_path, to_path)
+      FileUtils.mkdir_p(File.dirname(to_path))
+      FileUtils.cp(from_path, to_path)
+    end
+    
+    def newdoc
+      path = @main_arg
+      (warn "Name must end in .txt!".yellow; exit) unless path.match /\.txt$/
+      if File.exist?(path)
+        warn "Refusing to overwrite already existing file #{path}!".yellow; exit
+      else
+        boilerplate = user_template('newdoc')
+        boilerplate = default_template('newdoc') unless File.exist?(boilerplate)
+        copy_template(boilerplate, path)
+        puts "Done! You may now run `cv edit #{path}`!".green
+      end
+    end
 
     def make
+      @params_file = @main_arg
       raise ArgumentError unless @params_file.match /.*\.txt/
       inpath = File.dirname(@params_file)
       tmpdir = Dir.mktmpdir('cvmaker-')
@@ -71,20 +91,15 @@ module CVMaker
       end
     end
     
-    def copy_template(from_path, to_path)
-      FileUtils.mkdir_p(File.dirname(to_path))
-      FileUtils.cp(from_path, to_path)
-    end
-
     def edit
-      if TEMPLATES.include? @params_file
-        tpl_name = @params_file
-        @params_file = user_template(tpl_name)
-        copy_template(default_template(tpl_name), @params_file) unless File.exist?(@params_file)
+      if TEMPLATES.include? @main_arg
+        tpl_name = @main_arg
+        @main_arg = user_template(tpl_name)
+        copy_template(default_template(tpl_name), @main_arg) unless File.exist?(@main_arg)
       else
-        raise ArgumentError unless @params_file.match /.*\.txt/
+        raise ArgumentError unless @main_arg.match /.*\.txt/
       end
-      @params_file = File.expand_path(@params_file)
+      @params_file = File.expand_path(@main_arg)
       unless TTY::Editor.open(@params_file, command: 'gedit')
         # user might not have a favorite editor set
         puts "Sorry, I don't know what your favorite text editor is.\n" \

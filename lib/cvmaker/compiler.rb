@@ -10,8 +10,10 @@ module CVMaker
       puts "Compiling with parameters from #{params_file}".light_black
       res_files = res_files.map{|f| File.join(@dir, f)}
       tpl_files = tpl_files.map{|f| File.join(@dir, f)}
-      eval(File.read(params_file))
-      @params = Module.constants.filter{|c| c.match /(OWN|ADDRESSEE|CL)_/}.map{|var| ["VAR_#{var}", eval(var.to_s)]}.sort.to_h
+      fcontents = File.read(params_file)
+      fcontents += '"' unless fcontents.strip.chars.last == '"' # to guard against user error
+      eval(fcontents) # this will put a bunch of new all-uppercase constants on the module scope...
+      @params = Module.constants.filter{|c| c.match /(OWN|ADDRESSEE|CL)_/}.map{|var| ["VAR_#{var}", eval(var.to_s)]}.sort.to_h # ... which are being handled here
       @attachments = @params['VAR_CL_ATTACHMENTS'].split(',').map{|a| a.gsub(/'/, '').gsub(/\w+/){|w| w.capitalize}.gsub(/[\s\.]+/, '')+'.pdf'}[1..-1].map{|a|
         File.exist?(File.join(@dir,a)) ? puts("#{a} found".light_black) : warn("Warning: referenced attachment file '#{a}' not found!".yellow)
         "\\includepdf[pages=-]{#{File.join(@dir,a)}}"}

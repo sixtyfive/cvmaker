@@ -13,14 +13,15 @@ module CVMaker
       opts = Slop::Options.new
       opts.banner = "Usage: "+"cv".light_blue+" <command> [options]\n\n" \
                   + "  available commands:\n\n" \
-                  + "  make <path to .txt file>".light_blue+" (file can be CV parameters only, or also have a CL text)\n" \
-                  + "  edit <cv|cl_template|preamble>".light_blue+" (all are LaTeX) or "+"<path to .txt file>".light_blue
+                  + "  newdoc <path to new .txt file>".light_blue+" (will create a new file with all available fields for you to fill out)\n" \
+                  + "  make   <path to .txt file>".light_blue+" (will read a file such as created by 'new')\n" \
+                  + "  edit   <newdoc|cv|cl_template|preamble>".light_blue+" (all are LaTeX) or "+"<path to .txt file>".light_blue
       opts.separator "\n  options:\n"
       opts.string '-l', '--lang', 'language of template to edit, or of template to use for making the PDF(s)'
       opts.separator "                languages should be specified in ISO-639-2, "+"e.g. 'en', 'hi', 'jbo', etc.".light_blue
       opts.separator "                (the default language is English - or the .txt's LANG option if present)\n"
       opts.separator "  Output PDF(s) will be written to a new folder, i.e."
-      opts.separator "  for a CL called Rekall.txt, you'll get Rekall/*.pdf"
+      opts.separator "  for a CL called Rekall.txt, you'll get Rekall/*.pdf\n"
       @opts = Slop::Parser.new(opts).parse(ARGV)
       print_usage unless @opts.arguments.any?
       @command = @opts.arguments.first
