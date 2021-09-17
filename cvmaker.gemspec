@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "slop"
   spec.add_dependency "iso639"
   spec.add_dependency "tty-editor"
+  spec.add_dependency "parseconfig"
 
   # For more information and examples about making a new gem, checkout our
   # guide at: https://bundler.io/guides/creating_gem.html
