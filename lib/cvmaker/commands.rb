@@ -3,7 +3,6 @@ require 'colorize'
 require 'iso639'
 require 'tmpdir'
 require 'tty-editor'
-require 'parseconfig'
 
 require_relative 'compiler'
 
@@ -16,56 +15,19 @@ module CVMaker
   RES_FILE_TYPES = %w[pdf tif tiff png jpg jpeg gif bmp]
 
   class Commands
-    def initialize(opts)
+    def initialize(opts, config)
       @opts = opts
-      @opts[:lang] ||= Iso639['English'].alpha2
-      raise ArgumentError unless Iso639[@opts[:lang]] 
-      @dot_dir = File.join(Dir.home, '.cvmaker')
-      @config_file = File.join(@dot_dir, filename('config'))
-      FileUtils.touch(@config_file)
-      @config = ParseConfig.new(@config_file)
-      read_or_init_config_file
-      @res_path = File.join(@docs_path, @attachments_dir)
+      @opts[:lang] ||= config['default_lang']
+      unless Iso639[@opts[:lang]] 
+        warn "Oops, #{@opts[:lang]} is no valid ISO-639-2 language code!".red; exit
+      end
       @main_arg = @opts.arguments[1] if @opts.arguments.size == 2
-    end
-
-    def ask_for_docs_path
-      path = default_path = File.join(Dir.home, 'Applications')
-      puts "It seems this is your first run, or perhaps you're upgrading from an older version."
-      puts "I just have one quick question for you: where would you like your documents to be stored by default?"
-      puts "Please type a full path or hit <Enter> to accept the default."
-      loop do
-        accepted = false
-        print "\n  [#{default_path.light_blue}]: "
-        path = STDIN.gets.chomp
-        if Dir.exist? path
-          accepted = true; puts
-        else
-          print "\n#{path} does not exist yet. Okay to create (#{'y'.light_blue}) or not (#{'n'.light_blue})? "
-          (FileUtils.mkdir_p(path); accepted = true) if STDIN.gets.chomp == 'y'
-        end
-        (puts "Okay, saving #{path} as default document storage!\n"; break) if accepted
-      end
-      path
-    end
-
-    def read_or_init_config_file
-      loop do
-        @docs_path = @config['default_docs_path']
-        break if @docs_path
-        @config.add('default_docs_path', ask_for_docs_path) unless @docs_path
-      end
-      loop do
-        @attachments_dir = @config['attachments_dir']
-        break if @attachments_dir
-        @config.add('attachments_dir', 'Attachments') unless @attachments_dir
-      end
-      loop do
-        @editor = @config['default_editor']
-        break if @editor
-        @config.add('default_editor', 'gedit') unless @editor
-      end
-      @config.write(File.open(@config_file, 'w'))
+      @dot_dir = config['config_path']
+      @config_file = config['config_file']
+      @docs_path = config['default_docs_path']
+      @attachments_dir = config['attachments_dir']
+      @editor = config['default_editor']
+      @res_path = config['res_path']
     end
 
     def filename(tpl_name)
@@ -145,14 +107,13 @@ module CVMaker
         CVMaker::Compiler.run(tmpdir, File.basename(@params_file), @res_files, @tpl_files)
         outfiles = Dir[File.join(tmpdir,'C{V,L}*.pdf')]
         FileUtils.cp(outfiles, outpath)
+        # do the house cleaning
         FileUtils.remove_entry(tmpdir)
-        FileUtils.rmdir(outpath) if Dir.empty?(outpath)
-        puts "All done! Find your freshly made PDFs in #{outpath}!".green
-        # do some house cleaning
         if @docs_path == File.dirname(@params_file) and Dir.exist?(outpath)
           FileUtils.mv(@params_file, outpath)
           puts "  (#{File.basename(@params_file)} moved to #{outpath})"
         end
+        puts "All done! Find your freshly made PDFs in #{outpath}!".green
       rescue Errno::ENOENT => e
         file = e.message.split(/-\s+/).last
         warn "Error: no such file: \"#{file}\". Got a typo?".red
@@ -161,8 +122,12 @@ module CVMaker
         warn "Often there'll just be a typo in one of your templates or the .txt file..."
       rescue Exception => e
         warn ("Error: something went wrong. The message was:" \
-            + "  #{e.message.gsub(/\n/,"\n  ")}").red
-            + "If you're, like, really good with troubleshooting things, maybe check #{tmpdir} out?"
+            + "  #{e.message.gsub(/\n/,"\n  ")}").red \
+            + "If you're, like, really good with troubleshooting things, maybe check out #{tmpdir}?" \
+            + "Otherwise, please shoot us an Issue at "+"https://github.com/sixtyfive/cvmaker/issues!".light_blue
+      ensure
+        # no need for an empty directory to be there
+        FileUtils.rmdir(outpath) if Dir.empty?(outpath)
       end
     end
     
@@ -187,8 +152,8 @@ module CVMaker
 
     # called by CVMaker::CLI
     CVMaker::KNOWN_COMMANDS.each do |command|
-      define_singleton_method(command) do |opts|
-        new(opts).public_send(command)
+      define_singleton_method(command) do |opts,config|
+        new(opts,config).public_send(command)
       end
     end
   end
