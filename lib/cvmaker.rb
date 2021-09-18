@@ -22,7 +22,12 @@ module CVMaker
                   + "  newdoc <name or path>".light_blue+" (will create a new file for you to fill out)\n" \
                   + "  ls".light_blue+ "                    (show files currently in default storage)\n" \
                   + "  make   <name or path>".light_blue+" (will read a file such as created by 'new')\n" \
-                  + "  edit   <newdoc|cv|cl_template|preamble|config>".light_blue+" (all are LaTeX) or "+"<name or path>".light_blue
+                  + "  edit".light_blue+"   " \
+                    + "<name or path>".light_blue+" or " \
+                    + "newdoc".light_blue+" or " \
+                    + "cv|cl_template|preamble".light_blue \
+                    + " (all are LaTeX) or " \
+                    + "config".light_blue
       opts.separator "\n  options:\n"
       opts.string '-l', '--lang', 'language of template to edit, or of template to use for making the PDF(s)'
       opts.separator "                   languages should be specified in ISO-639-2, "+"e.g. 'en', 'hi', 'jbo', etc.".light_blue
@@ -63,35 +68,44 @@ module CVMaker
     end
 
     def load_config_file
-      @dot_dir = File.join(Dir.home, '.cvmaker')
-      @config_file = File.join(@dot_dir, 'cvmaker.conf')
-      FileUtils.touch(@config_file)
-      @config = ParseConfig.new(@config_file)
-      @config.add('config_path', @dot_dir)
-      @config.add('config_file', @config_file)
+      dot_dir = File.join(Dir.home, '.cvmaker')
+      config_file = File.join(dot_dir, 'cvmaker.conf')
+      FileUtils.touch(config_file)
+      old_config_string = File.read(config_file).strip
+      @config = ParseConfig.new(config_file)
+      @config.add('config_path', dot_dir)
+      @config.add('config_file', config_file)
+      docs_path = ''
       loop do
-        @docs_path = @config['default_docs_path']
-        break if @docs_path
-        @config.add('default_docs_path', ask_for_docs_path) unless @docs_path
+        docs_path = @config['default_docs_path']
+        break if docs_path
+        @config.add('default_docs_path', ask_for_docs_path) unless docs_path
       end
+      attachments_dir = ''
       loop do
-        @attachments_dir = @config['attachments_dir']
-        break if @attachments_dir
-        @config.add('attachments_dir', 'Attachments') unless @attachments_dir
+        attachments_dir = @config['attachments_dir']
+        break if attachments_dir
+        @config.add('attachments_dir', 'Attachments') unless attachments_dir
       end
+      editor = ''
       loop do
-        @editor = @config['default_editor']
-        break if @editor
-        @config.add('default_editor', 'gedit') unless @editor
+        editor = @config['default_editor']
+        break if editor
+        @config.add('default_editor', 'gedit') unless editor
       end
+      lang = ''
       loop do
-        @lang = @config['default_lang']
-        break if @lang
+        lang = @config['default_lang']
+        break if lang
         @config.add('default_lang', Iso639['English'].alpha2)
       end
-      @res_path = File.join(@docs_path, @attachments_dir)
-      @config.add('res_path', @res_path)
-      @config.write(File.open(@config_file, 'w'))
+      res_path = File.join(docs_path, attachments_dir)
+      @config.add('res_path', res_path)
+      new_config = StringIO.new
+      @config.write(new_config)
+      if new_config.string.strip != old_config_string
+        File.write(config_file, new_config.string.strip) 
+      end
     end
 
     def self.start; new; end

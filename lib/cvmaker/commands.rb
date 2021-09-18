@@ -3,6 +3,7 @@ require 'colorize'
 require 'iso639'
 require 'tmpdir'
 require 'tty-editor'
+require 'stringio'
 
 require_relative 'compiler'
 
@@ -72,19 +73,19 @@ module CVMaker
     def find_params_file(arg)
       name = File.basename(arg, '.txt')
       dirs = [@docs_path, File.join(@docs_path,name), '.', File.join('.',name)]
-      @params_file = nil
-      dirs.each{|d| f=File.join(d,name+'.txt'); @params_file=f if File.exist?(f)}
-      (warn "Whoops, can't find a file called \"#{arg}\". Got a typo?".yellow; exit) unless @params_file
-      @params_file = File.expand_path(@params_file)
+      params_file = nil
+      dirs.each{|d| f=File.join(d,name+'.txt'); params_file=f if File.exist?(f)}
+      (warn "Whoops, can't find a file called \"#{arg}\". Got a typo?".yellow; exit) unless params_file
+      File.expand_path(params_file)
     end
 
     def make
       raise ArgumentError unless @main_arg
-      @params_file = find_params_file(@main_arg)
-      inpath = File.dirname(@params_file)
+      params_file = find_params_file(@main_arg)
+      inpath = File.dirname(params_file)
       tmpdir = Dir.mktmpdir('cvmaker-')
       begin
-        FileUtils.cp(@params_file, File.join(tmpdir,File.basename(@params_file)))
+        FileUtils.cp(params_file, File.join(tmpdir,File.basename(params_file)))
         FileUtils.cp(Dir[File.join(File.dirname(__FILE__),'..','..','moderncv_style','*')], tmpdir)
         @res_files = Dir.glob(
           File.join(@res_path, "*.{#{RES_FILE_TYPES.join(',')}}"),
@@ -97,21 +98,21 @@ module CVMaker
           t = File.exist?(u) ? u : d
           FileUtils.cp(t, File.join(tmpdir, File.basename(t)))
           File.basename(t)}
-        outdir = File.basename(@params_file,'.txt')
+        outdir = File.basename(params_file,'.txt')
         # on first go-around, put output files into a sub-directory by the name of the input file
         outpath = File.join(inpath, outdir)
         # oh! but this one isn't being compiled the first time; it was already stowed away...
         outpath = inpath if outdir == inpath.split('/').last
         # either way, make sure the path exists
         FileUtils.mkdir_p(outpath)
-        CVMaker::Compiler.run(tmpdir, File.basename(@params_file), @res_files, @tpl_files)
+        CVMaker::Compiler.run(tmpdir, File.basename(params_file), @res_files, @tpl_files)
         outfiles = Dir[File.join(tmpdir,'C{V,L}*.pdf')]
         FileUtils.cp(outfiles, outpath)
         # do the house cleaning
         FileUtils.remove_entry(tmpdir)
-        if @docs_path == File.dirname(@params_file) and Dir.exist?(outpath)
-          FileUtils.mv(@params_file, outpath)
-          puts "  (#{File.basename(@params_file)} moved to #{outpath})"
+        if @docs_path == File.dirname(params_file) and Dir.exist?(outpath)
+          FileUtils.mv(params_file, outpath)
+          puts "  (#{File.basename(params_file)} moved to #{outpath})"
         end
         puts "All done! Find your freshly made PDFs in #{outpath}!".green
       rescue Errno::ENOENT => e
@@ -134,19 +135,19 @@ module CVMaker
     def edit
       raise ArgumentError unless @main_arg
       if TEMPLATES.include? @main_arg
-        @params_file = user_template(@main_arg)
-        copy_template(default_template(@main_arg), @params_file) unless File.exist?(@params_file)
+        file = user_template(@main_arg)
+        copy_template(default_template(@main_arg), file) unless File.exist?(file)
       else
-        @params_file = find_params_file(@main_arg)
+        file = find_params_file(@main_arg)
       end
       @editor = 'nano' if ENV['DISPLAY'].to_s.empty?
-      unless TTY::Editor.open(@params_file, command: @editor)
+      unless TTY::Editor.open(file.strip, command: @editor)
         # user might not have a favorite editor set
         puts "Sorry, I couldn't launch the '#{@editor}' editor.\n" \
            + "Please change #{@config_file} accordingly or\n" \
            + "manually edit and save the following file:\n" \
            + "\n" \
-           + "  #{@params_file}".light_blue
+           + "  #{file}".light_blue
       end
     end
 
