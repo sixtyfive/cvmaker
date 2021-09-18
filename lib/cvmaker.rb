@@ -11,12 +11,12 @@ module CVMaker
 
     def initialize
       opts = Slop::Options.new
-      opts.banner = "Usage: "+"cv".light_blue+" <command> [options]\n\n" \
+      opts.banner = "Usage: "+"cv".light_blue+" <command> [options] 🐿️\n\n" \
                   + "  available commands:\n\n" \
                   + "  newdoc <name or path>".light_blue+" (will create a new file for you to fill out)\n" \
                   + "  ls".light_blue+ "                    (show files currently in default storage)\n" \
                   + "  make   <name or path>".light_blue+" (will read a file such as created by 'new')\n" \
-                  + "  edit   <newdoc|cv|cl_template|preamble|config>".light_blue+" (all are LaTeX) or "+"<path to .txt file>".light_blue
+                  + "  edit   <newdoc|cv|cl_template|preamble|config>".light_blue+" (all are LaTeX) or "+"<name or path>".light_blue
       opts.separator "\n  options:\n"
       opts.string '-l', '--lang', 'language of template to edit, or of template to use for making the PDF(s)'
       opts.separator "                languages should be specified in ISO-639-2, "+"e.g. 'en', 'hi', 'jbo', etc.".light_blue
