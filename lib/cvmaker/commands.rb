@@ -146,9 +146,9 @@ module CVMaker
         outfiles = Dir[File.join(tmpdir,'C{V,L}*.pdf')]
         FileUtils.cp(outfiles, outpath)
         FileUtils.remove_entry(tmpdir)
+        FileUtils.rmdir(outpath) if Dir.empty?(outpath)
         puts "All done! Find your freshly made PDFs in #{outpath}!".green
         # do some house cleaning
-        FileUtils.rmdir(outpath) if Dir.empty?(outpath)
         if @docs_path == File.dirname(@params_file) and Dir.exist?(outpath)
           FileUtils.mv(@params_file, outpath)
           puts "  (#{File.basename(@params_file)} moved to #{outpath})"
