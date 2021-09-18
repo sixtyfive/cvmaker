@@ -93,15 +93,17 @@ module CVMaker
     
     def newdoc
       raise ArgumentError unless @main_arg
-      path = @main_arg
-      (warn "Name must end in .txt!".yellow; exit) unless path.match /\.txt$/
+      name = File.basename(@main_arg, '.txt')
+      dir = File.dirname(@main_arg)
+      dir = @docs_path unless dir.include? '/'
+      path = File.expand_path(File.join(dir, name+'.txt'))
       if File.exist?(path)
         warn "Refusing to overwrite already existing file #{path}!".yellow; exit
       else
         boilerplate = user_template('newdoc')
         boilerplate = default_template('newdoc') unless File.exist?(boilerplate)
         copy_template(boilerplate, path)
-        puts "Done! You may now run `cv edit #{path}`!".green
+        puts "Done! You may now run `cv edit #{name}`!".green
       end
     end
 
@@ -172,11 +174,12 @@ module CVMaker
       else
         @params_file = find_params_file(@main_arg)
       end
+      @editor = 'nano' if ENV['DISPLAY'].to_s.empty?
       unless TTY::Editor.open(@params_file, command: @editor)
         # user might not have a favorite editor set
-        puts "Sorry, I don't know what your favorite text editor is.\n" \
-           + "Please set your EDITOR environment variable to its path\n" \
-           + "— or manually edit and save the following file:\n" \
+        puts "Sorry, I couldn't launch the '#{@editor}' editor.\n" \
+           + "Please change #{@config_file} accordingly or\n" \
+           + "manually edit and save the following file:\n" \
            + "\n" \
            + "  #{@params_file}".light_blue
       end
