@@ -11,9 +11,9 @@ task :new_minor_release do
   ver_code = File.read(ver_file)
   version = ver_code.scan(/[\d\.]+/).first.split('.').map(&:to_i)
   version[-1] = version[-1] + 1
-  pp ver_code.gsub(/[\d\.]+/,version)
-  #File.write(ver_file, ver_code.gsub(/[\d\.]+/,version)) 
-  #system('git commit -a -m "bumping"')
-  #system('git push')
-  #system('rake release')
+  ver_code.gsub!(/[\d\.]+/,version.join('.'))
+  File.write(ver_file, ver_code) 
+  system('git commit -a -m "bumping"')
+  system('git push')
+  system('rake release')
 end
