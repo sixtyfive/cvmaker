@@ -139,10 +139,8 @@ module CVMaker
       raise ArgumentError unless @main_arg
       if TEMPLATES.include? @main_arg
         file = user_template(@main_arg)
-        if @opts[:lang] != @default_lang and !File.exist?(default_template(@main_arg))
-          # this is in case we don't supply a default template in the chosen language 
-          copy_template(default_template(@main_arg,@default_lang), default_template(@main_arg,@opts[:lang]))
-        end
+        source_template = default_template(@main_arg)
+        source_template = default_template(@main_arg, @default_lang) unless File.exist?(source_template)
         copy_template(default_template(@main_arg), file) unless File.exist?(file)
       else
         file = find_params_file(@main_arg)
