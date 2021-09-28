@@ -141,7 +141,7 @@ module CVMaker
         file = user_template(@main_arg)
         source_template = default_template(@main_arg)
         source_template = default_template(@main_arg, @default_lang) unless File.exist?(source_template)
-        copy_template(default_template(@main_arg), file) unless File.exist?(file)
+        copy_template(source_template, file) unless File.exist?(file)
       else
         file = find_params_file(@main_arg)
       end
