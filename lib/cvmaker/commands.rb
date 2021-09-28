@@ -18,7 +18,8 @@ module CVMaker
   class Commands
     def initialize(opts, config)
       @opts = opts
-      @opts[:lang] ||= config['default_lang']
+      @default_lang = config['default_lang']
+      @opts[:lang] ||= @default_lang
       unless Iso639[@opts[:lang]] 
         warn "Oops, #{@opts[:lang]} is no valid ISO-639-2 language code!".red; exit
       end
@@ -31,14 +32,16 @@ module CVMaker
       @res_path = config['res_path']
     end
 
-    def filename(tpl_name)
+    def filename(tpl_name, lang=nil)
+      lang ||= @opts[:lang]
       return tpl_name+'.txt' if tpl_name == 'newdoc'
       return 'cvmaker.conf' if tpl_name == 'config'
-      tpl_name.gsub(/_template$/,'')+'-'+@opts[:lang]+'.tex.tpl'
+      tpl_name.gsub(/_template$/,'')+'-'+lang+'.tex.tpl'
     end
 
-    def default_template(tpl_name)
-      return File.join(File.dirname(__FILE__), '..', '..', 'default_templates', filename(tpl_name))
+    def default_template(tpl_name, lang=nil)
+      lang ||= @opts[:lang]
+      return File.join(File.dirname(__FILE__), '..', '..', 'default_templates', filename(tpl_name, lang))
     end
 
     def user_template(tpl_name)
@@ -136,6 +139,10 @@ module CVMaker
       raise ArgumentError unless @main_arg
       if TEMPLATES.include? @main_arg
         file = user_template(@main_arg)
+        if @opts[:lang] != @default_lang and !File.exist?(default_template(@main_arg))
+          # this is in case we don't supply a default template in the chosen language 
+          copy_template(default_template(@main_arg,@default_lang), default_template(@main_arg,@opts[:lang]))
+        end
         copy_template(default_template(@main_arg), file) unless File.exist?(file)
       else
         file = find_params_file(@main_arg)

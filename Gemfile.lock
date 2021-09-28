@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cvmaker (0.1.4)
+    cvmaker (0.2.5)
       colorize
       iso639
       parseconfig
